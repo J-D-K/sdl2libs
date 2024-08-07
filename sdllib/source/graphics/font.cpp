@@ -3,7 +3,8 @@
 #include <cstring>
 #include <fstream>
 
-#include "sdl2font.hpp"
+#include "graphics/font.hpp"
+#include "graphics/renderer.hpp"
 
 // This is the buffer size used for va operation
 constexpr int VA_BUFFER_SIZE = 0x1000;
@@ -15,17 +16,18 @@ constexpr uint32_t SURFACE_GREEN_MASK = 0x00FF0000;
 constexpr uint32_t SURFACE_BLUE_MASK = 0x0000FF00;
 constexpr uint32_t SURFACE_ALPHA_MASK = 0x000000FF;
 
-sdl2font::font::font(SDL_Renderer *renderer, const char *fontPath)
+
+sdl::graphics::font::font(const char *fontPath)
 {
-    font::open(renderer, fontPath);
+    font::load(fontPath);
 }
 
-sdl2font::font::font(SDL_Renderer *renderer, const std::string &fontPath)
+sdl::graphics::font::font(const std::string &fontPath)
 {
-    font::open(renderer, fontPath.c_str());
+    font::load(fontPath.c_str());
 }
 
-sdl2font::font::~font()
+sdl::graphics::font::~font()
 {
     // Loop through and destroy textures.
     for(auto &glyphData : m_FontCacheMap)
@@ -48,11 +50,8 @@ sdl2font::font::~font()
     }
 }
 
-bool sdl2font::font::open(SDL_Renderer *renderer, const char *fontPath)
+bool sdl::graphics::font::load(const char *fontPath)
 {
-    // Save renderer pointer
-    m_Renderer = renderer;
-
     // Get font size
     std::ifstream fontStream(fontPath, std::ios::binary);
     fontStream.seekg(0, std::ios::end);
@@ -83,13 +82,16 @@ bool sdl2font::font::open(SDL_Renderer *renderer, const char *fontPath)
     return true;
 }
 
-void sdl2font::font::renderText(int x, int y, int fontSize, SDL_Color textColor, const char *format, ...)
+void sdl::graphics::font::renderText(int x, int y, int fontSize, SDL_Color textColor, const char *format, ...)
 {
     // Resize to fontSize in pixels
     FT_Set_Char_Size(m_FreeTypeFace, 0, fontSize * 64, 90, 90);
 
     // Working x so we can line break
     int workingX = x;
+
+    // Pointer to renderer since we're rendering stuff
+    SDL_Renderer *renderer = sdl::graphics::renderer::getRenderer();
 
     // Va buffer
     std::array<char, VA_BUFFER_SIZE> vaBuffer;
@@ -114,7 +116,7 @@ void sdl2font::font::renderText(int x, int y, int fontSize, SDL_Color textColor,
         }
 
         // Get glyphData for current character
-        glyphData *currentGlyph = font::getGlyph(m_Renderer, vaBuffer.at(i), fontSize);
+        glyphData *currentGlyph = font::getGlyph(renderer, vaBuffer.at(i), fontSize);
         if(currentGlyph != NULL)
         {
             // Rects to render
@@ -136,20 +138,23 @@ void sdl2font::font::renderText(int x, int y, int fontSize, SDL_Color textColor,
             // Set color
             SDL_SetTextureColorMod(currentGlyph->glyphTexture, textColor.r, textColor.g, textColor.b);
             // Render
-            SDL_RenderCopy(m_Renderer, currentGlyph->glyphTexture, &sourceRect, &destinationRect);
+            SDL_RenderCopy(renderer, currentGlyph->glyphTexture, &sourceRect, &destinationRect);
             // Add to workingX
             workingX += currentGlyph->advanceX;
         }
     }
 }
 
-int sdl2font::font::getTextWidth(int fontSize, const char *format, ...)
+int sdl::graphics::font::getTextWidth(int fontSize, const char *format, ...)
 {
     // Return size
     int textWidth = 0;
 
     // Resize font just in case
     FT_Set_Char_Size(m_FreeTypeFace, 0, fontSize * 64, 90, 90);
+
+    // Need renderer for new glyphs
+    SDL_Renderer *renderer = sdl::graphics::renderer::getRenderer();
 
     // Va
     std::array<char, VA_BUFFER_SIZE> vaBuffer;
@@ -170,7 +175,7 @@ int sdl2font::font::getTextWidth(int fontSize, const char *format, ...)
             continue;
         }
 
-        glyphData *currentGlyph = font::getGlyph(m_Renderer, vaBuffer.at(i), fontSize);
+        glyphData *currentGlyph = font::getGlyph(renderer, vaBuffer.at(i), fontSize);
         if(currentGlyph != NULL)
         {
             textWidth += currentGlyph->advanceX;
@@ -179,7 +184,7 @@ int sdl2font::font::getTextWidth(int fontSize, const char *format, ...)
     return textWidth;
 }
 
-void sdl2font::font::setErrorString(const char *format, ...)
+void sdl::graphics::font::setErrorString(const char *format, ...)
 {
     // Array  buffer
     std::array<char, VA_BUFFER_SIZE> vaBuffer;
@@ -192,11 +197,9 @@ void sdl2font::font::setErrorString(const char *format, ...)
 
     // Just set string
     m_ErrorString = vaBuffer.data();
-
-    printf("%s\n", m_ErrorString.c_str());
 }
 
-glyphData *sdl2font::font::getGlyph(SDL_Renderer *renderer, char codepoint, int fontSize)
+sdl::graphics::glyphData *sdl::graphics::font::getGlyph(SDL_Renderer *renderer, char codepoint, int fontSize)
 {
     // This is kind of like an ID used to identify the glyph
     uint64_t codepointID = static_cast<uint64_t>(codepoint) << 56 | fontSize;
@@ -261,7 +264,7 @@ glyphData *sdl2font::font::getGlyph(SDL_Renderer *renderer, char codepoint, int 
     return &m_FontCacheMap.at(codepointID);
 }
 
-const char *sdl2font::font::getErrorString(void)
+const char *sdl::graphics::font::getErrorString(void)
 {
     return m_ErrorString.c_str();
 }

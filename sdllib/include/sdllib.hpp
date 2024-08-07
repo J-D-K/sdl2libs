@@ -1,9 +1,11 @@
 #pragma once
-#include "window.hpp"
-#include "renderer.hpp"
-#include "input.hpp"
+#include "graphics/font.hpp"
+#include "graphics/renderer.hpp"
+#include "graphics/window.hpp"
 
-namespace sdl2base
+#include "input/input.hpp"
+
+namespace sdl
 {
     // These start and quit SDL2
     bool init(void);

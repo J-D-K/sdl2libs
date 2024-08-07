@@ -10,10 +10,15 @@ add_compile_options(-Wall -O2)
 include(FindFreetype)
 
 find_package(SDL2 REQUIRED)
+find_package(SDL2_image REQUIRED)
 find_package(Freetype REQUIRED)
 
-include_directories(sdl2font/include sdl2base/include ${FREETYPE_INCLUDE_DIRS})
+set(INCLUDE_DIRS
+    sdllib/include
+    sdllib/include/graphics
+    sdllib/include/input)
 
-add_subdirectory(sdl2base)
-add_subdirectory(sdl2font)
+include_directories(${INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS})
+
+add_subdirectory(sdllib)
 add_subdirectory(TestingApp)

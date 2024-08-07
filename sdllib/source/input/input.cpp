@@ -1,6 +1,6 @@
 #include <unordered_map>
 
-#include "input.hpp"
+#include "input/input.hpp"
 
 // This holds the three states keys can be in.
 typedef struct
@@ -16,7 +16,7 @@ namespace
     std::unordered_map<SDL_Scancode, keyState> s_KeyStates;
 }
 
-void sdl2base::input::init(void)
+void sdl::input::init(void)
 {
     // This is to get the number of keys
     int keyCount = 0;
@@ -34,7 +34,7 @@ void sdl2base::input::init(void)
     }
 }
 
-void sdl2base::input::update(void)
+void sdl::input::update(void)
 {
     // Get array of states from SDL
     const uint8_t *keyboardState = SDL_GetKeyboardState(NULL);
@@ -67,17 +67,17 @@ void sdl2base::input::update(void)
     }
 }
 
-bool sdl2base::input::keyPressed(SDL_Scancode keyCode)
+bool sdl::input::keyPressed(SDL_Scancode keyCode)
 {
     return s_KeyStates[keyCode].pressed;
 }
 
-bool sdl2base::input::keyHeld(SDL_Scancode keyCode)
+bool sdl::input::keyHeld(SDL_Scancode keyCode)
 {
     return s_KeyStates[keyCode].held;
 }
 
-bool sdl2base::input::keyReleased(SDL_Scancode keyCode)
+bool sdl::input::keyReleased(SDL_Scancode keyCode)
 {
     return s_KeyStates[keyCode].released;
 }

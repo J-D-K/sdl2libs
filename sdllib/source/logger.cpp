@@ -14,7 +14,7 @@ namespace
 
 void logger::init(void)
 {
-    s_LogFile.open("sdl2Base.txt");
+    s_LogFile.open("sdllib.txt");
 }
 
 void logger::log(const char *format, ...)

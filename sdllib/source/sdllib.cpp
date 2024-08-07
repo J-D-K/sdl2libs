@@ -1,9 +1,10 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #include "logger.hpp"
-#include "sdl2base.hpp"
+#include "sdllib.hpp"
 
-bool sdl2base::init(void)
+bool sdl::init(void)
 {
     // Init logger
     logger::init();
@@ -18,15 +19,24 @@ bool sdl2base::init(void)
         logger::log("Error initializing SDL2: %s.", SDL_GetError());
         return false;
     }
+
+    // Just png for now, I guess
+    sdlError = IMG_Init(IMG_INIT_PNG);
+    if(sdlError != IMG_INIT_PNG)
+    {
+        logger::log("Error initializing SDL2_image for PNG: %s.", IMG_GetError());
+        return false;
+    }
+
     return true;
 }
 
-void sdl2base::exit(void)
+void sdl::exit(void)
 {
     SDL_Quit();
 }
 
-void sdl2base::update(void)
+void sdl::update(void)
 {
     SDL_PumpEvents();
 }
